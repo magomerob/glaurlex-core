@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import operator
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
@@ -18,13 +19,48 @@ class Group:
     ----------
     name : str
     filters : mapping
-        ``column -> rule``. A rule is a list (membership), a mapping from
-        comparison operator (``"<="``, ``">="``, ``"!="``, ``"=="``) to value,
-        or a scalar (equality). Rules on different columns are combined with AND.
+        ``column -> rule``. A rule is a list (membership), a scalar (equality)
+        or a mapping in one of two shapes:
+
+        - ``{op: value, ...}`` with ``op`` in ``"<=" "<" ">=" ">" "==" "!="``;
+          all comparisons must hold;
+        - ``{"op": op, "value": value}`` with the same operators, or
+          ``{"op": "between", "min": low, "max": high}`` (bounds inclusive).
+
+        Rules on different columns are combined with AND.
     """
 
     name: str
     filters: Mapping[str, Any] = field(default_factory=dict)
+
+
+_COMPARISONS = {
+    "<=": operator.le,
+    "<": operator.lt,
+    ">=": operator.ge,
+    ">": operator.gt,
+    "==": operator.eq,
+    "!=": operator.ne,
+}
+
+
+def _comparisons(rule: Mapping[str, Any]) -> list[tuple[str, Any]]:
+    if "op" not in rule:
+        pairs = list(rule.items())
+    else:
+        op = rule["op"]
+        keys = {"op", "min", "max"} if op == "between" else {"op", "value"}
+        if set(rule) != keys:
+            msg = f"rule {dict(rule)!r} must have exactly the keys {sorted(keys)}"
+            raise ValueError(msg)
+        if op == "between":
+            return [(op, (rule["min"], rule["max"]))]
+        pairs = [(op, rule["value"])]
+    for op, _ in pairs:
+        if op not in _COMPARISONS:
+            msg = f"unknown operator {op!r} in rule {dict(rule)!r}"
+            raise ValueError(msg)
+    return pairs
 
 
 def apply_group(informants: pd.DataFrame, group: Group) -> pd.DataFrame:
@@ -41,25 +77,22 @@ def apply_group(informants: pd.DataFrame, group: Group) -> pd.DataFrame:
     pandas.DataFrame
         Filtered copy of ``informants``.
 
-    Notes
-    -----
-    Mapping rules only recognize the keys ``"<="``, ``">="``, ``"!="`` and
-    ``"=="``; any other key is ignored and does not filter.
+    Raises
+    ------
+    ValueError
+        If a mapping rule has an unknown operator, or an ``"op"`` rule lacks
+        or adds keys.
     """
     df = informants.copy()
     for col, rule in group.filters.items():
         if isinstance(rule, list):
             df = df[df[col].isin(rule)]
         elif isinstance(rule, Mapping):
-            for op, value in rule.items():
-                if op == "<=":
-                    df = df[df[col] <= value]
-                elif op == ">=":
-                    df = df[df[col] >= value]
-                elif op == "!=":
-                    df = df[df[col] != value]
-                elif op == "==":
-                    df = df[df[col] == value]
+            for op, value in _comparisons(rule):
+                if op == "between":
+                    df = df[df[col].between(*value)]
+                else:
+                    df = df[_COMPARISONS[op](df[col], value)]
         else:
             df = df[df[col] == rule]
     return df
