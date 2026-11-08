@@ -6,9 +6,10 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-# PageRank, eigenvector centrality and Shapiro-Wilk differ by up to ~1e-6 relative
-# across the supported scipy/networkx versions.
-RTOL = 1e-5
+# PageRank, eigenvector centrality and Shapiro-Wilk differ across the supported
+# scipy/networkx versions and CPUs: up to ~2e-5 relative (Shapiro-Wilk p-value,
+# scipy 1.11 on x86_64).
+RTOL = 5e-5
 ATOL = 1e-10
 
 
