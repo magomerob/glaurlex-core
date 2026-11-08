@@ -53,6 +53,14 @@ def test_informant_filter_equals_prefiltered_frame(topic, informants):
     pd.testing.assert_frame_equal(filtered, prefiltered)
 
 
+def test_ties_are_ordered_by_type():
+    topic = pd.DataFrame(
+        {"informant_id": [1, 2, 3, 4], "pos": [0, 0, 0, 0], "type": ["c", "a", "b", "a"]}
+    )
+
+    assert type_statistics(topic)["type"].tolist() == ["a", "b", "c"]
+
+
 @pytest.mark.parametrize("frame", [topic_frame(), topic_frame("ab")], ids=["empty", "filtered-out"])
 def test_empty_input_keeps_columns(frame):
     out = type_statistics(frame, informant_ids=[] if len(frame) else None)

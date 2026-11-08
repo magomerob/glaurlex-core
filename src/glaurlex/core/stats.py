@@ -43,7 +43,7 @@ def type_statistics(
         tokens), ``tokens`` (occurrences), ``availability``, ``avg_pos`` (mean
         0-indexed position), ``appearance`` (share of informants producing the
         type) and ``cum_freq`` (cumulative ``rel_freq``). Rows are sorted by
-        ``availability`` in descending order.
+        ``availability`` in descending order, ties by ``type``.
 
     Notes
     -----
@@ -92,6 +92,6 @@ def type_statistics(
         out["avg_pos"] = out["type"].map(by_type["pos"].mean()).to_numpy()
     out["appearance"] = out["type"].map(appearance).to_numpy()
 
-    out = out.sort_values("availability", ascending=False)
+    out = out.sort_values(["availability", "type"], ascending=[False, True])
     out["cum_freq"] = out["rel_freq"].cumsum()
     return out

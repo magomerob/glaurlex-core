@@ -47,6 +47,10 @@ extracted into its own package. The entries below record what changed against th
 - `apply_group` understands `{"op": "between", "min": a, "max": b}` and `{"op": ">", "value": v}`
   rules and the `<` and `>` operators. Before, such rules were ignored, so groups that used them
   silently contained every informant; they now filter.
+- Rows with equal sort keys come out in the same order on every platform: `type_statistics` breaks
+  availability ties by `type`, `edge_weight_divergence` by edge, and `pairwise_similarity_table`
+  keeps pair order. Before, the order of tied rows, and with it their `cum_freq` in
+  `type_statistics`, could depend on the CPU.
 - Post-hoc comparisons in `compare_groups` test the right pairs of levels when a level has fewer
   than two observations.
 - `decode_bytes` tries utf-8-sig, cp1252 and latin-1 in that order. Statistical encoding detection

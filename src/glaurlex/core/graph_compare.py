@@ -187,7 +187,7 @@ def edge_weight_divergence(graph_a: nx.Graph, graph_b: nx.Graph) -> pd.DataFrame
         Columns ``edge`` (``"u — v"``), ``source``, ``target``,
         ``norm_weight_a``, ``norm_weight_b`` (0 where the edge is absent),
         ``delta`` (B minus A) and ``presence`` (``ONLY_A``, ``ONLY_B`` or
-        ``BOTH``), sorted by ``|delta|`` descending.
+        ``BOTH``), sorted by ``|delta|`` descending, ties by edge.
     """
     columns = ["edge", "source", "target", "norm_weight_a", "norm_weight_b", "delta", "presence"]
     norm_a = _normalized(canonical_edges(graph_a))
@@ -211,7 +211,9 @@ def edge_weight_divergence(graph_a: nx.Graph, graph_b: nx.Graph) -> pd.DataFrame
             "presence": np.where(in_a & in_b, BOTH, np.where(in_a, ONLY_A, ONLY_B)),
         }
     )
-    return out.reindex(out["delta"].abs().sort_values(ascending=False).index).reset_index(drop=True)
+    return out.reindex(
+        out["delta"].abs().sort_values(ascending=False, kind="stable").index
+    ).reset_index(drop=True)
 
 
 def _presence(graphs: Mapping[str, nx.Graph]) -> pd.DataFrame:
@@ -332,7 +334,8 @@ def pairwise_similarity_table(graphs: Mapping[str, nx.Graph]) -> pd.DataFrame:
     -------
     pandas.DataFrame
         Columns ``entity_a``, ``entity_b``, ``jaccard_nodes`` and
-        ``jaccard_edges``, sorted by ``jaccard_nodes`` descending.
+        ``jaccard_edges``, sorted by ``jaccard_nodes`` descending, ties in
+        pair order.
     """
     nodes = pairwise_similarity_matrix(graphs, on="nodes")
     edges = pairwise_similarity_matrix(graphs, on="edges")
@@ -346,7 +349,7 @@ def pairwise_similarity_table(graphs: Mapping[str, nx.Graph]) -> pd.DataFrame:
             "jaccard_edges": [float(edges.loc[a, b]) for a, b in pairs],
         }
     )
-    return out.sort_values("jaccard_nodes", ascending=False).reset_index(drop=True)
+    return out.sort_values("jaccard_nodes", ascending=False, kind="stable").reset_index(drop=True)
 
 
 def intersection_sizes(graphs: Mapping[str, nx.Graph], top: int = 15) -> pd.DataFrame:

@@ -184,6 +184,14 @@ def test_divergence_marks_presence_and_sorts_by_magnitude():
     assert out["delta"].sum() == pytest.approx(0.0)
 
 
+def test_divergence_breaks_ties_by_edge():
+    tied = [(f"w{i:02d}", f"w{i + 1:02d}", 1) for i in range(40)]
+    out = edge_weight_divergence(weighted(tied), weighted([("x", "y", 1)]))
+
+    edges = out["edge"].tolist()
+    assert edges == ["x — y", *sorted(edges[1:])]
+
+
 def test_presence_summary_and_intersections_agree():
     graphs = {
         "x": weighted([("a", "b", 1)]),
