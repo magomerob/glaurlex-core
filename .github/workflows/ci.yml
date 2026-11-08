@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.3.3
       - run: uv venv -p 3.12 && uv pip install -e . --group dev
       - run: .venv/bin/python -m ruff check .
       - run: .venv/bin/python -m ruff format --check .
@@ -34,7 +34,7 @@ jobs:
     name: test (${{ matrix.python }}, ${{ matrix.resolution }})
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.3.3
       - run: uv venv -p ${{ matrix.python }}
       # The resolution applies to the runtime dependencies only; test tools stay at their latest.
       - run: uv pip install --resolution ${{ matrix.resolution }} -e .
