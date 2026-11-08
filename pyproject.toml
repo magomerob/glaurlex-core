@@ -40,7 +40,6 @@ packages = ["src/glaurlex"]
 
 [tool.hatch.build.targets.sdist]
 include = ["src/glaurlex", "tests", "README.md", "LICENSE", "CHANGELOG.md", "pyproject.toml"]
-exclude = ["CLAUDE.md", "CLAUDE.local.md", ".claude", "**/*.local.md"]
 
 [tool.ruff]
 line-length = 100

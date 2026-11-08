@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+      - run: uv venv -p 3.12 && uv pip install -e . --group dev
+      - run: .venv/bin/python -m ruff check .
+      - run: .venv/bin/python -m ruff format --check .
+      - run: .venv/bin/python -m mypy
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { python: "3.10", resolution: lowest-direct }
+          - { python: "3.11", resolution: highest }
+          - { python: "3.12", resolution: highest }
+          - { python: "3.13", resolution: highest }
+    name: test (${{ matrix.python }}, ${{ matrix.resolution }})
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+      - run: uv venv -p ${{ matrix.python }}
+      # The resolution applies to the runtime dependencies only; test tools stay at their latest.
+      - run: uv pip install --resolution ${{ matrix.resolution }} -e .
+      - run: uv pip install pytest pytest-cov
+      - run: uv pip list
+      - run: .venv/bin/python -m pytest --cov=glaurlex --cov-fail-under=85
