@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling>=1.24"]
+requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [project]
@@ -7,8 +7,10 @@ name = "glaurlex"
 version = "0.1.0"
 description = "Lexical availability statistics, co-occurrence graphs and group inference."
 readme = "README.md"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
-authors = [{ name = "magomerob", email = "magomerob@unirioja.es" }]
+authors = [{ name = "Marcos Gómez Robres", email = "magomerob@unirioja.es" }]
 keywords = ["lexical availability", "disponibilidad léxica", "linguistics", "network analysis"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -37,7 +39,7 @@ dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.14,<0.15", "mypy>=1.10", "build", 
 packages = ["src/glaurlex"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/glaurlex", "tests", "README.md", "pyproject.toml"]
+include = ["src/glaurlex", "tests", "README.md", "LICENSE", "CHANGELOG.md", "pyproject.toml"]
 exclude = ["CLAUDE.md", "CLAUDE.local.md", ".claude", "**/*.local.md"]
 
 [tool.ruff]

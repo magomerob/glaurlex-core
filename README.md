@@ -7,7 +7,7 @@ comparison and group inference against sociolinguistic variables.
 ## Installation
 
 ```bash
-pip install glaurlex
+pip install git+https://github.com/magomerob/glaurlex-core.git@v0.1.0
 ```
 
 Python 3.10 or later. Runtime dependencies: numpy, pandas, scipy, networkx, igraph, leidenalg.
@@ -71,14 +71,11 @@ python -m mypy
 
 ## Funding and authorship
 
-Proyecto PID2022-137337NB-C21 financiado por MICIU/AEI/10.13039/501100011033 y por FEDER, UE.
+Project PID2022-137337NB-C21 funded by MICIU/AEI/10.13039/501100011033 and by ERDF/EU.
 
-Developed by Marcos Gómez Robres (mgrobres@gmail.com / magomerob@unirioja.es).
-
-## Citation
-
-TODO
+Developed by Marcos Gómez Robres (magomerob@unirioja.es).
 
 ## License
 
-TODO
+Copyright (C) 2026 Marcos Gómez Robres. Released under the GNU General Public License
+v3.0 or later; see [LICENSE](LICENSE).
