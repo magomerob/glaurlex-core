@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "glaurlex"
-version = "0.1.0"
+version = "0.1.1"
 description = "Lexical availability statistics, co-occurrence graphs and group inference."
 readme = "README.md"
 license = "GPL-3.0-or-later"
@@ -31,6 +31,12 @@ dependencies = [
     "igraph>=0.11,<2",
     "leidenalg>=0.10,<0.12",
 ]
+
+[project.urls]
+Homepage = "https://github.com/magomerob/glaurlex-core"
+Repository = "https://github.com/magomerob/glaurlex-core"
+Issues = "https://github.com/magomerob/glaurlex-core/issues"
+Changelog = "https://github.com/magomerob/glaurlex-core/blob/master/CHANGELOG.md"
 
 [dependency-groups]
 dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.14,<0.15", "mypy>=1.10", "build", "twine"]

@@ -7,7 +7,7 @@ comparison and group inference against sociolinguistic variables.
 ## Installation
 
 ```bash
-pip install git+https://github.com/magomerob/glaurlex-core.git@v0.1.0
+pip install glaurlex
 ```
 
 Python 3.10 or later. Runtime dependencies: numpy, pandas, scipy, networkx, igraph, leidenalg.

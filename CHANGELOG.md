@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.1 (2026-11-16)
+
+First release published to PyPI as `glaurlex`. No API or numerical changes compared to 0.1.0.
+
+### Changed
+
+- Package metadata (`[project.urls]`) and `README.md` installation instructions (`pip install glaurlex`) updated for PyPI.
+- Release workflow publishes distributions to PyPI via trusted publishing.
+
 ## 0.1.0 (2026-11-08)
 
 First public release. The library is the computational core of the GLAURLex web application,
