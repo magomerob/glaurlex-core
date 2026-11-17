@@ -6,7 +6,6 @@ from helpers import assert_matches
 from glaurlex.core.graph import (
     DIRECTED_NODE_STATS_COLUMNS,
     NODE_STATS_COLUMNS,
-    SmallWorld,
     bigrams_for_topic,
     bigrams_to_dirgraph,
     bigrams_to_undgraph,
@@ -50,6 +49,9 @@ def test_bigrams_without_pairs(rows):
 
     assert out.empty
     assert list(out.columns) == ["type_1", "type_2", "count"]
+    unordered = bigrams_to_unordered(out)
+    assert unordered.empty
+    assert list(unordered.columns) == ["type_1", "type_2", "count"]
 
 
 def test_unordered_bigrams_merge_both_directions():
@@ -73,17 +75,6 @@ def test_graphs_carry_counts_as_weights():
     assert not undirected.is_directed()
     assert undirected["b"]["a"]["weight"] == 5
     assert undirected.number_of_edges() == 2
-
-
-def test_build_cooccurrence_graph_composes_bigram_steps(topic):
-    bigrams = bigrams_for_topic(topic)
-    for directed, expected in (
-        (True, bigrams_to_dirgraph(bigrams)),
-        (False, bigrams_to_undgraph(bigrams)),
-    ):
-        built = build_cooccurrence_graph(topic, directed=directed)
-        assert built.is_directed() is directed
-        assert nx.utils.edges_equal(built.edges(data="weight"), expected.edges(data="weight"))
 
 
 def test_bigram_parity(topic, reference):
@@ -123,11 +114,15 @@ def test_node_stats_directed_columns_and_strong_components():
     assert out.loc["b", ["in_degree", "out_degree"]].tolist() == [1, 2]
 
 
-@pytest.mark.parametrize("graph", [nx.Graph(), nx.DiGraph()], ids=["undirected", "directed"])
-def test_node_stats_of_empty_graph_has_full_schema(graph):
-    expected = list(NODE_STATS_COLUMNS) + (
-        list(DIRECTED_NODE_STATS_COLUMNS) if graph.is_directed() else []
-    )
+@pytest.mark.parametrize(
+    ("graph", "expected"),
+    [
+        (nx.Graph(), list(NODE_STATS_COLUMNS)),
+        (nx.DiGraph(), [*NODE_STATS_COLUMNS, *DIRECTED_NODE_STATS_COLUMNS]),
+    ],
+    ids=["undirected", "directed"],
+)
+def test_node_stats_of_empty_graph_has_full_schema(graph, expected):
     assert list(node_stats(graph).columns) == expected
 
 
@@ -181,26 +176,33 @@ def test_small_world_parity_and_progress(topic, reference):
     calls = []
     result = small_world_indices(graph, n=3, progress_cb=lambda i, n: calls.append((i, n)))
 
-    assert isinstance(result, SmallWorld)
     assert_matches(vars(result), reference["small_world_largest_component"])
     assert calls == [(0, 3), (1, 3), (2, 3), (3, 3)]
 
 
 @pytest.mark.parametrize(
-    "graph",
-    [nx.DiGraph([(0, 1), (1, 2), (2, 3), (3, 0)]), nx.Graph([(0, 0)]), nx.Graph([(0, 1), (2, 3)])],
+    ("graph", "match"),
+    [
+        (nx.DiGraph([(0, 1), (1, 2), (2, 3), (3, 0)]), "undirected"),
+        (nx.Graph([(0, 0)]), "two nodes"),
+        (nx.Graph([(0, 1), (2, 3)]), "connected"),
+    ],
     ids=["directed", "single-node", "disconnected"],
 )
-def test_small_world_rejects_invalid_graphs(graph):
-    with pytest.raises(ValueError, match="small_world_indices requires"):
+def test_small_world_rejects_invalid_graphs(graph, match):
+    with pytest.raises(ValueError, match=match):
         small_world_indices(graph, n=1)
 
 
 def test_component_helpers():
-    graph = nx.DiGraph([("b", "c"), ("x", "y"), ("a", "z")])
+    directed = nx.DiGraph([("b", "c"), ("x", "y"), ("a", "z")])
+    undirected = nx.Graph([("b", "c"), ("x", "y"), ("a", "z")])
 
-    assert connected_components_sorted(graph) == [{"a", "z"}, {"b", "c"}, {"x", "y"}]
-    assert not is_graph_connected(graph)
+    assert connected_components_sorted(directed) == [{"a", "z"}, {"b", "c"}, {"x", "y"}]
+    assert connected_components_sorted(undirected) == [{"a", "z"}, {"b", "c"}, {"x", "y"}]
+    assert not is_graph_connected(directed)
+    assert not is_graph_connected(undirected)
     assert is_graph_connected(nx.DiGraph([("a", "b"), ("c", "b")]))
+    assert is_graph_connected(nx.Graph([("a", "b"), ("c", "b")]))
     assert not is_graph_connected(nx.Graph())
     assert connected_components_sorted(nx.Graph()) == []

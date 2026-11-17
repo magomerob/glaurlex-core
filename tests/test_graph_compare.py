@@ -211,16 +211,23 @@ def test_presence_summary_and_intersections_agree():
     assert sizes["n_nodes"].sum() == len(presence)
 
 
-def test_pairwise_similarity_table_matches_matrices(levels):
-    table = pairwise_similarity_table(levels)
-    nodes = pairwise_similarity_matrix(levels)
+def test_pairwise_similarity_table_ranks_pairs_and_preserves_ties():
+    graphs = {
+        "a": weighted([("w1", "w2", 1), ("w2", "w4", 1)]),
+        "b": weighted([("w1", "w2", 1), ("w2", "w3", 1)]),
+        "c": weighted([("w1", "w3", 1), ("w2", "w3", 1)]),
+    }
+    table = pairwise_similarity_table(graphs)
 
-    assert len(table) == 3
-    assert table["jaccard_nodes"].is_monotonic_decreasing
-    for _, row in table.iterrows():
-        assert row["jaccard_nodes"] == nodes.loc[row["entity_a"], row["entity_b"]]
+    assert list(zip(table["entity_a"], table["entity_b"], strict=True)) == [
+        ("b", "c"),
+        ("a", "b"),
+        ("a", "c"),
+    ]
+    assert table["jaccard_nodes"].tolist() == pytest.approx([1.0, 0.5, 0.5])
+    assert table["jaccard_edges"].tolist() == pytest.approx([1 / 3, 1 / 3, 0.0])
     with pytest.raises(ValueError, match="on must be"):
-        pairwise_similarity_matrix(levels, on="types")
+        pairwise_similarity_matrix(graphs, on="types")
 
 
 def test_profile_accepts_full_node_stats_and_external_partition(pair):
@@ -364,10 +371,14 @@ def test_permutation_test_detects_separated_groups():
             nx.add_path(graph, vocab[i])
         return graph
 
-    out = permutation_overlap_test(build, [1, 2, 3], [4, 5, 6], k=50, seed=0)
+    calls = []
+    out = permutation_overlap_test(
+        build, [1, 2, 3], [4, 5, 6], k=50, seed=0, progress_cb=lambda i, n: calls.append((i, n))
+    )
     assert out["jaccard_nodes"]["observed"] == 0.0
     assert out["jaccard_nodes"]["p_value"] < 0.1
     assert len(out["jaccard_edges"]["null"]) == 50
+    assert calls == [(i, 50) for i in range(51)]
 
 
 @pytest.mark.parametrize(

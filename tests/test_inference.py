@@ -27,18 +27,25 @@ def test_informant_metrics_parity(metrics, reference):
 
 def test_informant_metrics_on_a_hand_computed_list():
     df = pd.DataFrame(
-        {"informant_id": [7, 7, 7, 8], "pos": [0, 1, 2, 0], "type": ["a", "b", "a", "c"]}
+        {
+            "informant_id": [7, 7, 7, 8, 8],
+            "pos": [0, 1, 2, 0, 1],
+            "type": ["a", "b", "a", "c", "d"],
+        }
     )
     informants = pd.DataFrame({"informant_id": [7, 8, 9], "SEX": ["F", "M", "F"]})
     availability = type_statistics(df).set_index("type")["availability"]
-    row = informant_metrics(df, informants).set_index("informant_id").loc[7]
+    out = informant_metrics(df, informants).set_index("informant_id")
+    row = out.loc[7]
 
+    assert out.index.tolist() == [7, 8]
     assert row[["n_tokens", "n_types", "max_pos", "SEX"]].tolist() == [3, 2, 3, "F"]
     assert row["mean_pos"] == pytest.approx(2.0)
     assert row["ttr"] == pytest.approx(2 / 3)
-    assert row["type_coverage"] == pytest.approx(2 / 3)
+    assert row["type_coverage"] == pytest.approx(2 / 4)
     assert row["entropy"] == pytest.approx(stats.entropy([2, 1], base=2))
     assert row["total_availability"] == pytest.approx(2 * availability["a"] + availability["b"])
+    assert informant_metrics(df.iloc[0:0], informants).empty
 
 
 def test_informants_with_the_same_responses_tie_exactly():
@@ -54,11 +61,6 @@ def test_informants_with_the_same_responses_tie_exactly():
 
     assert out.loc[1, columns].tolist() == out.loc[3, columns].tolist()
     assert out.loc[4, "entropy"] == out.loc[5, "entropy"]
-
-
-def test_informant_metrics_excludes_absent_informants(metrics, informants):
-    assert set(metrics["informant_id"]) <= set(informants["informant_id"])
-    assert metrics["informant_id"].is_monotonic_increasing
 
 
 def test_informant_metrics_requires_informant_id(topic):

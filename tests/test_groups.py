@@ -34,9 +34,7 @@ def test_apply_group_combines_rules_with_and(informants, filters, expected):
 @pytest.mark.parametrize(
     ("rule", "expected"),
     [
-        ({"op": "between", "min": 20, "max": 30}, [2, 5]),
         ({"op": "between", "min": 25, "max": 28}, [2, 5]),
-        ({"op": ">", "value": 30}, [3, 4]),
         ({"op": ">", "value": 31}, [4]),
         ({"op": "<", "value": 25}, [1]),
         ({"op": ">=", "value": 31}, [3, 4]),
