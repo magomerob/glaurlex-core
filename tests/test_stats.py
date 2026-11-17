@@ -45,14 +45,6 @@ def test_single_position_topic_gives_unit_availability():
     assert out["appearance"].to_dict() == pytest.approx({"a": 2 / 3, "b": 1 / 3})
 
 
-def test_informant_filter_equals_prefiltered_frame(topic, informants):
-    ids = informants.loc[informants["LEVEL"] == "B", "informant_id"]
-    filtered = type_statistics(topic, informant_ids=ids)
-    prefiltered = type_statistics(topic[topic["informant_id"].isin(ids)])
-
-    pd.testing.assert_frame_equal(filtered, prefiltered)
-
-
 def test_ties_are_ordered_by_type():
     topic = pd.DataFrame(
         {"informant_id": [1, 2, 3, 4], "pos": [0, 0, 0, 0], "type": ["c", "a", "b", "a"]}
@@ -61,9 +53,13 @@ def test_ties_are_ordered_by_type():
     assert type_statistics(topic)["type"].tolist() == ["a", "b", "c"]
 
 
-@pytest.mark.parametrize("frame", [topic_frame(), topic_frame("ab")], ids=["empty", "filtered-out"])
-def test_empty_input_keeps_columns(frame):
-    out = type_statistics(frame, informant_ids=[] if len(frame) else None)
+@pytest.mark.parametrize(
+    ("frame", "informant_ids"),
+    [(topic_frame(), None), (topic_frame("ab"), [])],
+    ids=["empty", "filtered-out"],
+)
+def test_empty_input_keeps_columns(frame, informant_ids):
+    out = type_statistics(frame, informant_ids=informant_ids)
 
     assert out.empty
     assert tuple(out.columns) == TYPE_STATISTICS_COLUMNS

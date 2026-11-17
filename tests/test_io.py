@@ -68,13 +68,17 @@ def test_parse_salamanca_rejects_malformed_content(text, message):
 
 
 def test_read_salamanca_matches_parse_of_bytes(tmp_path):
+    content = "10012 001 01 niño, café\n10022 003 02 árbol, €\n"
     path = tmp_path / "input.txt"
-    path.write_bytes(SAMPLE.encode("cp1252"))
-    from_file = read_salamanca(path)
-    from_text = parse_salamanca(SAMPLE)
+    path.write_bytes(content.encode("cp1252"))
+    kwargs = {"stimulus_map": {"1": "ACTIONS"}, "level_labels": {"12": "B1"}, "topic_prefix": "t_"}
+    from_file = read_salamanca(path, **kwargs)
+    from_text = parse_salamanca(content, **kwargs)
 
     pd.testing.assert_frame_equal(from_file.informants, from_text.informants)
-    assert from_file.topics.keys() == from_text.topics.keys()
+    assert list(from_file.topics) == ["ACTIONS", "t_02"]
+    for name in from_text.topics:
+        pd.testing.assert_frame_equal(from_file.topics[name], from_text.topics[name])
     with pytest.raises(FileNotFoundError):
         read_salamanca(tmp_path / "missing.txt")
 
@@ -94,7 +98,7 @@ ACCENTED = "casa, niño, camión, pingüino, árbol, corazón, montaña"
     [
         (ACCENTED.encode(), ACCENTED),
         (b"\xef\xbb\xbf" + ACCENTED.encode(), ACCENTED),
-        (ACCENTED.encode("cp1252"), ACCENTED),
+        (f"{ACCENTED}, €".encode("cp1252"), f"{ACCENTED}, €"),
         (b"ni\xf1o \x81", "niño \x81"),
     ],
     ids=["utf-8", "utf-8-bom", "cp1252", "latin-1"],

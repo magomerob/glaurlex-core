@@ -12,12 +12,17 @@ CONFIG = {
 
 
 @pytest.mark.parametrize(
-    ("col", "order"),
-    [("LEVEL", ["primary", "secondary", "tertiary"]), ("SEX", []), ("EMPTY", []), ("MISSING", [])],
+    ("col", "order", "ordinal"),
+    [
+        ("LEVEL", ["primary", "secondary", "tertiary"], True),
+        ("SEX", [], False),
+        ("EMPTY", [], False),
+        ("MISSING", [], False),
+    ],
 )
-def test_order_and_ordinality(col, order):
+def test_order_and_ordinality(col, order, ordinal):
     assert get_order(CONFIG, col) == order
-    assert is_ordinal(CONFIG, col) is bool(order)
+    assert is_ordinal(CONFIG, col) is ordinal
 
 
 def test_split_variables_requires_parseable_and_many_distinct_values():
